@@ -24,3 +24,6 @@ jobs:
 
     - name: LRU-map cache testing
       run: go test ./internal/map_LRU_cache/
+
+    - name: TTL-map cache testing
+      run: go test ./internal/ttl_cache/
