@@ -20,10 +20,10 @@ jobs:
       uses: actions/setup-go@v4
 
     - name: Linked list testing
-      run: go test ./internal/map_LRU_cache/linked_list/
+      run: go test ./internal/lru_cache/linked_list/
 
     - name: LRU-map cache testing
-      run: go test ./internal/map_LRU_cache/
+      run: go test ./internal/lru_cache/
 
     - name: TTL-map cache testing
       run: go test ./internal/ttl_cache/
