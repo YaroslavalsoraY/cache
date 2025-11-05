@@ -8,46 +8,46 @@ import (
 
 const DefaultTTL = 10 * time.Second
 
-type TTLMap struct {
-	cache map[string]TTLElement
+type CacheWithTTL struct {
+	cache map[string]ElementWithTTL
 	ttl   time.Duration
 	mu    sync.RWMutex
 }
 
-type TTLElement struct {
+type ElementWithTTL struct {
 	value    string
 	removeAt time.Time
 }
 
-func NewTTLMap(ttl time.Duration) *TTLMap {
+func NewCacheWithTTL(ttl time.Duration) *CacheWithTTL {
 	if ttl < time.Second {
 		ttl = DefaultTTL
 	}
-	newMap := TTLMap{cache: make(map[string]TTLElement), ttl: ttl, mu: sync.RWMutex{}}
+	newMap := CacheWithTTL{cache: make(map[string]ElementWithTTL), ttl: ttl, mu: sync.RWMutex{}}
 
 	go newMap.mapCleaner()
 
 	return &newMap
 }
 
-func (tm *TTLMap) Get(key string) (string, error) {
+func (tm *CacheWithTTL) Get(key string) (string, error) {
 	tm.mu.RLock()
 	defer tm.mu.RUnlock()
 
 	result, ok := tm.cache[key]
-	if !ok {
+	if !ok || result.removeAt.Before(time.Now()) {
 		return "", errors.New("key does not exists")
 	}
 
 	return result.value, nil
 }
 
-func (tm *TTLMap) Set(key, value string) error {
+func (tm *CacheWithTTL) Set(key, value string) error {
 	tm.mu.Lock()
 	defer tm.mu.Unlock()
 
-	newElement := TTLElement{
-		value: value,
+	newElement := ElementWithTTL{
+		value:    value,
 		removeAt: time.Now().Add(tm.ttl),
 	}
 
@@ -56,7 +56,7 @@ func (tm *TTLMap) Set(key, value string) error {
 	return nil
 }
 
-func (tm *TTLMap) Exists(key string) bool {
+func (tm *CacheWithTTL) Exists(key string) bool {
 	tm.mu.RLock()
 	defer tm.mu.RUnlock()
 
@@ -65,14 +65,14 @@ func (tm *TTLMap) Exists(key string) bool {
 	return ok
 }
 
-func (tm *TTLMap) Count() int {
+func (tm *CacheWithTTL) Count() int {
 	tm.mu.RLock()
 	defer tm.mu.RUnlock()
 
 	return len(tm.cache)
 }
 
-func (tm *TTLMap) Delete (keys ...string) int {
+func (tm *CacheWithTTL) Delete(keys ...string) int {
 	tm.mu.Lock()
 	defer tm.mu.Unlock()
 
@@ -88,15 +88,15 @@ func (tm *TTLMap) Delete (keys ...string) int {
 	return count
 }
 
-func (tm *TTLMap) mapCleaner() {
+func (tm *CacheWithTTL) mapCleaner() {
 	for {
 		<-time.Tick(tm.ttl)
+		tm.mu.Lock()
 		for k, v := range tm.cache {
 			if v.removeAt.Before(time.Now()) {
-				tm.mu.Lock()
 				delete(tm.cache, k)
-				tm.mu.Unlock()
 			}
 		}
+		tm.mu.Unlock()
 	}
 }

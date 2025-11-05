@@ -47,7 +47,9 @@ func (mc *LRUCache) Set(key, value string) error {
 
 	result, ok := mc.cache[key]
 	if ok {
-		mc.ll.Delete(result)
+		result.SetValue(value)
+		mc.ll.MoveToFirst(result)
+		return nil
 	}
 
 	if mc.ll.GetLen() == mc.capacity {

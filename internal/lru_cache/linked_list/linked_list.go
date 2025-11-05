@@ -115,3 +115,7 @@ func (el *Element) GetValue() string {
 func (el *Element) GetKey() string {
 	return el.key
 }
+
+func (el *Element) SetValue(value string) {
+	el.value = value
+}

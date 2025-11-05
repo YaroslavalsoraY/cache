@@ -9,15 +9,14 @@ import (
 )
 
 const (
-	TestTTL = 3 * time.Second
+	TestTTL      = 3 * time.Second
 	TestDataSize = 10
 )
 
-
 func TestNewTTLMap(t *testing.T) {
-	newMap := NewTTLMap(TestTTL)
+	newMap := NewCacheWithTTL(TestTTL)
 
-	newDefaultMap := NewTTLMap(time.Microsecond)
+	newDefaultMap := NewCacheWithTTL(time.Microsecond)
 
 	require.Equal(t, newDefaultMap.ttl, DefaultTTL)
 
@@ -25,7 +24,7 @@ func TestNewTTLMap(t *testing.T) {
 }
 
 func TestSetGet(t *testing.T) {
-	ttlMap := NewTTLMap(TestTTL)
+	ttlMap := NewCacheWithTTL(TestTTL)
 
 	for i := 0; i < TestDataSize; i++ {
 		ttlMap.Set(strconv.Itoa(i), strconv.Itoa(i))
@@ -43,7 +42,7 @@ func TestSetGet(t *testing.T) {
 }
 
 func TestExists(t *testing.T) {
-	ttlMap := NewTTLMap(TestTTL)
+	ttlMap := NewCacheWithTTL(TestTTL)
 
 	for i := range TestDataSize {
 		ttlMap.Set(strconv.Itoa(i), strconv.Itoa(i))
@@ -60,7 +59,7 @@ func TestExists(t *testing.T) {
 }
 
 func TestCount(t *testing.T) {
-	ttlMap := NewTTLMap(TestTTL)
+	ttlMap := NewCacheWithTTL(TestTTL)
 
 	for i := range TestDataSize {
 		ttlMap.Set(strconv.Itoa(i), strconv.Itoa(i))
@@ -72,7 +71,7 @@ func TestCount(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
-	ttlMap := NewTTLMap(TestTTL)
+	ttlMap := NewCacheWithTTL(TestTTL)
 
 	for i := range TestDataSize {
 		ttlMap.Set(strconv.Itoa(i), strconv.Itoa(i))
@@ -91,20 +90,20 @@ func TestDelete(t *testing.T) {
 	require.Equal(t, ttlMap.Count(), 0)
 }
 
-func TestMapCleaner(t *testing.T) {
-	ttlMap := NewTTLMap(TestTTL)
+func TestMapCleanerAllMap(t *testing.T) {
+	ttlMap := NewCacheWithTTL(TestTTL)
 
 	for i := range TestDataSize {
 		ttlMap.Set(strconv.Itoa(i), strconv.Itoa(i))
 	}
 
-	<-time.Tick(TestTTL + 1 * time.Second)
+	<-time.Tick(TestTTL + 1*time.Second)
 
 	require.Equal(t, 0, ttlMap.Count())
 }
 
-func TestMapCleaner2(t *testing.T) {
-	ttlMap := NewTTLMap(TestTTL)
+func TestMapCleanerNotAllMap(t *testing.T) {
+	ttlMap := NewCacheWithTTL(TestTTL)
 
 	for i := range TestDataSize {
 		ttlMap.Set(strconv.Itoa(i), strconv.Itoa(i))
@@ -114,7 +113,7 @@ func TestMapCleaner2(t *testing.T) {
 
 	ttlMap.Set(strconv.Itoa(TestDataSize), strconv.Itoa(TestDataSize))
 
-	<-time.Tick(TestTTL / 2 + 1 * time.Second)
+	<-time.Tick(TestTTL/2 + 1*time.Second)
 
 	result := ttlMap.Exists(strconv.Itoa(TestDataSize))
 
