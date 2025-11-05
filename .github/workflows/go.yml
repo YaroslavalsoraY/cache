@@ -11,8 +11,15 @@ on:
 
 jobs:
 
-  build:
+  test:
     runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis:8.0.4-alpine
+        ports:
+          - "6379:6379"
+
     steps:
     - uses: actions/checkout@v4
 
